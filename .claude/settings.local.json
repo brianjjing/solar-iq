@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(python pipeline.py --zip 92307)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('solar_iq_92307.json'\\)\\); print\\(json.dumps\\(d, indent=2\\)\\)\")",
+      "Bash(python equity_gap/collect_data.py)",
+      "Bash(python equity_gap/train_model.py)",
+      "Bash(streamlit run *)",
+      "Bash(curl -s http://localhost:8501)"
+    ]
+  }
+}

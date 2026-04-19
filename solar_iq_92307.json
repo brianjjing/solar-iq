@@ -1,0 +1,290 @@
+{
+  "generated": "2026-04-18T22:16:29.771358",
+  "install_year": 2026,
+  "inputs": {
+    "zip": "92307"
+  },
+  "location": {
+    "zip": "92307",
+    "city": "Apple Valley",
+    "state": "CA",
+    "latitude": 34.5291,
+    "longitude": -117.2132
+  },
+  "eia": {
+    "current_rate_cents_kwh": 30.29,
+    "current_rate": 0.3029,
+    "avg_monthly_kwh": 484.5251191691184,
+    "escalation_rate": 0.057094076460472376,
+    "source": "EIA retail-sales API (RES sector)",
+    "period_latest": "2026-01-01",
+    "data_points": 60
+  },
+  "nrel": {
+    "system_size_kw": 2.9,
+    "ac_annual_kwh": 5369.173552303817,
+    "solrad_annual": 6.761476395074315,
+    "capacity_factor": 21.13515018226973,
+    "source": "NREL PVWatts v8",
+    "params": {
+      "module_type": "Premium",
+      "array_type": "Fixed roof",
+      "tilt": 20,
+      "azimuth": 180,
+      "losses_pct": 14
+    }
+  },
+  "openei": {
+    "retail_rate": 0.3029,
+    "utility_name": "Unknown (OpenEI returned no flat rate)",
+    "source": "EIA (OpenEI fallback)",
+    "guid": ""
+  },
+  "lbnl": {
+    "median_cost_per_watt": 4.689243350940599,
+    "median_rebate": 1377.0,
+    "sample_n": 19920,
+    "scope": "CA",
+    "source": "LBNL Tracking the Sun (Sep 2025)"
+  },
+  "nem_policy": {
+    "type": "NEM3",
+    "export_pct": 0.2,
+    "note": "CA NEM 3.0 - export at ~avoided cost (~$0.05/kWh)"
+  },
+  "roi": {
+    "gross_install_cost": 13598.81,
+    "itc_credit": 4079.64,
+    "itc_rate": 0.3,
+    "lbnl_rebate": 1377.0,
+    "net_cost": 8142.16,
+    "payback_year": 2042,
+    "payback_years": 16,
+    "npv_at_4pct": 1978.71,
+    "irr": 5.7,
+    "projection": [
+      {
+        "year": 2027,
+        "year_number": 1,
+        "rate_per_kwh": 0.3202,
+        "annual_savings": 343.84,
+        "cumulative_savings": 343.84,
+        "net_position": -7798.33
+      },
+      {
+        "year": 2028,
+        "year_number": 2,
+        "rate_per_kwh": 0.3385,
+        "annual_savings": 363.47,
+        "cumulative_savings": 707.3,
+        "net_position": -7434.86
+      },
+      {
+        "year": 2029,
+        "year_number": 3,
+        "rate_per_kwh": 0.3578,
+        "annual_savings": 384.22,
+        "cumulative_savings": 1091.52,
+        "net_position": -7050.64
+      },
+      {
+        "year": 2030,
+        "year_number": 4,
+        "rate_per_kwh": 0.3782,
+        "annual_savings": 406.15,
+        "cumulative_savings": 1497.67,
+        "net_position": -6644.49
+      },
+      {
+        "year": 2031,
+        "year_number": 5,
+        "rate_per_kwh": 0.3998,
+        "annual_savings": 429.34,
+        "cumulative_savings": 1927.02,
+        "net_position": -6215.15
+      },
+      {
+        "year": 2032,
+        "year_number": 6,
+        "rate_per_kwh": 0.4227,
+        "annual_savings": 453.86,
+        "cumulative_savings": 2380.87,
+        "net_position": -5761.29
+      },
+      {
+        "year": 2033,
+        "year_number": 7,
+        "rate_per_kwh": 0.4468,
+        "annual_savings": 479.77,
+        "cumulative_savings": 2860.64,
+        "net_position": -5281.52
+      },
+      {
+        "year": 2034,
+        "year_number": 8,
+        "rate_per_kwh": 0.4723,
+        "annual_savings": 507.16,
+        "cumulative_savings": 3367.8,
+        "net_position": -4774.36
+      },
+      {
+        "year": 2035,
+        "year_number": 9,
+        "rate_per_kwh": 0.4993,
+        "annual_savings": 536.12,
+        "cumulative_savings": 3903.92,
+        "net_position": -4238.24
+      },
+      {
+        "year": 2036,
+        "year_number": 10,
+        "rate_per_kwh": 0.5278,
+        "annual_savings": 566.73,
+        "cumulative_savings": 4470.65,
+        "net_position": -3671.52
+      },
+      {
+        "year": 2037,
+        "year_number": 11,
+        "rate_per_kwh": 0.5579,
+        "annual_savings": 599.08,
+        "cumulative_savings": 5069.73,
+        "net_position": -3072.43
+      },
+      {
+        "year": 2038,
+        "year_number": 12,
+        "rate_per_kwh": 0.5897,
+        "annual_savings": 633.29,
+        "cumulative_savings": 5703.02,
+        "net_position": -2439.15
+      },
+      {
+        "year": 2039,
+        "year_number": 13,
+        "rate_per_kwh": 0.6234,
+        "annual_savings": 669.44,
+        "cumulative_savings": 6372.46,
+        "net_position": -1769.7
+      },
+      {
+        "year": 2040,
+        "year_number": 14,
+        "rate_per_kwh": 0.659,
+        "annual_savings": 707.66,
+        "cumulative_savings": 7080.12,
+        "net_position": -1062.04
+      },
+      {
+        "year": 2041,
+        "year_number": 15,
+        "rate_per_kwh": 0.6966,
+        "annual_savings": 748.07,
+        "cumulative_savings": 7828.19,
+        "net_position": -313.97
+      },
+      {
+        "year": 2042,
+        "year_number": 16,
+        "rate_per_kwh": 0.7364,
+        "annual_savings": 790.78,
+        "cumulative_savings": 8618.97,
+        "net_position": 476.81
+      },
+      {
+        "year": 2043,
+        "year_number": 17,
+        "rate_per_kwh": 0.7785,
+        "annual_savings": 835.93,
+        "cumulative_savings": 9454.9,
+        "net_position": 1312.73
+      },
+      {
+        "year": 2044,
+        "year_number": 18,
+        "rate_per_kwh": 0.8229,
+        "annual_savings": 883.65,
+        "cumulative_savings": 10338.55,
+        "net_position": 2196.39
+      },
+      {
+        "year": 2045,
+        "year_number": 19,
+        "rate_per_kwh": 0.8699,
+        "annual_savings": 934.11,
+        "cumulative_savings": 11272.66,
+        "net_position": 3130.49
+      },
+      {
+        "year": 2046,
+        "year_number": 20,
+        "rate_per_kwh": 0.9195,
+        "annual_savings": 987.44,
+        "cumulative_savings": 12260.1,
+        "net_position": 4117.93
+      },
+      {
+        "year": 2047,
+        "year_number": 21,
+        "rate_per_kwh": 0.972,
+        "annual_savings": 1043.81,
+        "cumulative_savings": 13303.91,
+        "net_position": 5161.75
+      },
+      {
+        "year": 2048,
+        "year_number": 22,
+        "rate_per_kwh": 1.0275,
+        "annual_savings": 1103.41,
+        "cumulative_savings": 14407.32,
+        "net_position": 6265.16
+      },
+      {
+        "year": 2049,
+        "year_number": 23,
+        "rate_per_kwh": 1.0862,
+        "annual_savings": 1166.41,
+        "cumulative_savings": 15573.73,
+        "net_position": 7431.56
+      },
+      {
+        "year": 2050,
+        "year_number": 24,
+        "rate_per_kwh": 1.1482,
+        "annual_savings": 1233.0,
+        "cumulative_savings": 16806.73,
+        "net_position": 8664.57
+      },
+      {
+        "year": 2051,
+        "year_number": 25,
+        "rate_per_kwh": 1.2138,
+        "annual_savings": 1303.4,
+        "cumulative_savings": 18110.13,
+        "net_position": 9967.97
+      }
+    ]
+  },
+  "assumptions": {
+    "system_derate": 0.8,
+    "max_system_kw": 20.0,
+    "projection_years": 25,
+    "discount_rate": 0.04,
+    "itc_rate": 0.3,
+    "itc_source": "IRA 2022 - Federal residential solar ITC schedule",
+    "nem_source": "Hardcoded by state; see NEM_POLICIES in pipeline.py",
+    "savings_formula": "ac_annual_kwh x rate_t x nem_export_pct  (all production modeled as NEM credit)",
+    "rate_projection": "retail_rate x (1 + escalation_rate)^t"
+  },
+  "data_sources": {
+    "location": "Zippopotam (api.zippopotam.us)",
+    "electricity_price": "EIA Open Data API v2 - retail-sales, RES sector",
+    "avg_monthly_kwh": "EIA retail-sales (MWh sales / customers, last 12 months)",
+    "price_escalation": "EIA 5-year CAGR of annual average residential rate",
+    "solar_resource": "NREL PVWatts v8",
+    "utility_rate": "EIA (OpenEI fallback)",
+    "install_cost": "LBNL Tracking the Sun (Sep 2025)",
+    "incentives_federal": "IRS / IRA - hardcoded schedule",
+    "incentives_nem": "State NEM policies - hardcoded table"
+  }
+}
