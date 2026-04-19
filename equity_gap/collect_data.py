@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import requests
 from dotenv import load_dotenv
+from scipy.spatial import KDTree
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import PolynomialFeatures
 
@@ -25,23 +26,63 @@ from pipeline import _pvwatts_call, fetch_eia_data
 
 load_dotenv(ROOT / ".env")
 
-LBNL_CSV = ROOT / "TTS_LBNL_public_file_29-Sep-2025_all.csv"
-OUT_CSV = ROOT / "equity_gap_data.csv"
+RECORDS_CSV = ROOT / "records - Sheet1.csv"
+LBNL_CSV    = ROOT / "TTS_LBNL_public_file_29-Sep-2025_all.csv"
+OUT_CSV     = ROOT / "equity_gap_data.csv"
 
-CA_FIPS = "06"
-CENSUS_ACS_URL = "https://api.census.gov/data/2022/acs/acs5"
-NREL_SAMPLE_N = 200
-CA_EIA_RATE = 0.3029       # from pipeline run; used as constant across CA ZIPs
-CA_NEM_TYPE = "NEM3"
+CENSUS_ACS_URL  = "https://api.census.gov/data/2022/acs/acs5"
+NREL_SAMPLE_N   = 200
+CA_EIA_RATE     = 0.3029
+CA_NEM_TYPE     = "NEM3"
 CA_NEM_EXPORT_PCT = 0.20
 
 
 # ---------------------------------------------------------------------------
-# Step 1: LBNL aggregation
+# Step 1a: Records CSV — install counts per ZIP
 # ---------------------------------------------------------------------------
 
-def aggregate_lbnl() -> pd.DataFrame:
-    print("[1/5] Aggregating LBNL install data...")
+def aggregate_records(centroids: pd.DataFrame) -> pd.DataFrame:
+    print("[1/5] Aggregating records install data...")
+    df = pd.read_csv(RECORDS_CSV, header=None, low_memory=False)
+
+    df.columns = [f"c{i}" for i in range(df.shape[1])]
+    df["zip"] = df["c17"].astype(str).str.strip()
+    df["lat"] = pd.to_numeric(df["c11"], errors="coerce")
+    df["lon"] = pd.to_numeric(df["c12"], errors="coerce")
+    df["system_kw"] = pd.to_numeric(df["c8"], errors="coerce")
+    df["state"] = df["c15"].astype(str).str.strip().str.upper()
+
+    df = df[df["state"] == "CA"].copy()
+
+    bad = df["zip"].isna() | ~df["zip"].str.match(r"^\d{5}$")
+    missing = df[bad & df["lat"].notna() & df["lon"].notna()]
+    print(f"      -> {bad.sum()} rows missing ZIP; filling {len(missing)} via nearest centroid...")
+
+    if not missing.empty and not centroids.empty:
+        cent = centroids.dropna(subset=["lat", "lon"])
+        tree = KDTree(cent[["lat", "lon"]].values)
+        _, idxs = tree.query(missing[["lat", "lon"]].values)
+        df.loc[missing.index, "zip"] = cent.iloc[idxs]["zip"].values
+        print(f"      -> {len(missing)} ZIPs filled instantly via nearest centroid (no API calls)")
+
+    df["zip"] = df["zip"].astype(str).str.zfill(5)
+    df = df[df["zip"].str.match(r"^\d{5}$")]
+
+    agg = df.groupby("zip").agg(
+        install_count=("zip", "count"),
+        median_system_kw=("system_kw", "median"),
+    ).reset_index()
+
+    print(f"      -> {len(agg)} ZIPs with install data, {agg['install_count'].sum():,} total installs")
+    return agg
+
+
+# ---------------------------------------------------------------------------
+# Step 1b: LBNL — cost and third-party metadata only (not install counts)
+# ---------------------------------------------------------------------------
+
+def lbnl_supplemental() -> pd.DataFrame:
+    """Returns per-ZIP cost/rebate and third-party ownership from LBNL (no install counts)."""
     df = pd.read_csv(
         LBNL_CSV,
         usecols=["zip_code", "customer_segment", "installation_date",
@@ -64,14 +105,10 @@ def aggregate_lbnl() -> pd.DataFrame:
     df = df[(df["cost_per_watt"] > 0.5) & (df["cost_per_watt"] < 15)]
 
     agg = df.groupby("zip_code").agg(
-        install_count=("zip_code", "count"),
-        median_system_kw=("PV_system_size_DC", "median"),
         median_cost_per_watt=("cost_per_watt", "median"),
         pct_third_party=("third_party_owned", lambda x: (pd.to_numeric(x, errors="coerce") == 1).mean()),
-        latest_install_year=("installation_date", lambda x: x.dt.year.max()),
     ).reset_index()
 
-    print(f"      -> {len(agg)} ZIPs with LBNL install data, {agg['install_count'].sum():,} total installs")
     return agg
 
 
@@ -81,7 +118,6 @@ def aggregate_lbnl() -> pd.DataFrame:
 
 def fetch_census_ca() -> pd.DataFrame:
     print("[2/5] Fetching Census ACS data for CA ZIPs...")
-    # ZCTAs are not nested under states in Census API; pull all and filter to CA
     params = {
         "get": "B19013_001E,B25001_001E,B25003_002E,B01003_001E",
         "for": "zip code tabulation area:*",
@@ -89,9 +125,7 @@ def fetch_census_ca() -> pd.DataFrame:
     r = requests.get(CENSUS_ACS_URL, params=params, timeout=60)
     r.raise_for_status()
     data = r.json()
-    cols = data[0]
-    rows = data[1:]
-    df = pd.DataFrame(rows, columns=cols)
+    df = pd.DataFrame(data[1:], columns=data[0])
     df.rename(columns={
         "zip code tabulation area": "zip",
         "B19013_001E": "median_income",
@@ -104,10 +138,7 @@ def fetch_census_ca() -> pd.DataFrame:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
     df["zip"] = df["zip"].astype(str).str.zfill(5)
-
-    # Filter to CA ZIPs: 90000-96162 covers all California ZIP codes
     df = df[df["zip"].between("90000", "96162")].copy()
-
     df = df[df["housing_units"] > 0].copy()
     df["owner_pct"] = (df["owner_occupied"] / df["housing_units"]).clip(0, 1)
     df["median_income"] = df["median_income"].clip(lower=0)
@@ -157,7 +188,6 @@ def fetch_nrel_sample(zip_centroids: pd.DataFrame, nrel_key: str) -> pd.DataFram
     print(f"[4/5] Sampling NREL irradiance for {NREL_SAMPLE_N} ZIPs...")
     df = zip_centroids.dropna(subset=["lat", "lon"]).copy()
 
-    # Stratified grid sample: bin by lat/lon tiles
     df["lat_bin"] = pd.cut(df["lat"], bins=10, labels=False)
     df["lon_bin"] = pd.cut(df["lon"], bins=10, labels=False)
     sample = (df.groupby(["lat_bin", "lon_bin"], group_keys=False)
@@ -170,7 +200,7 @@ def fetch_nrel_sample(zip_centroids: pd.DataFrame, nrel_key: str) -> pd.DataFram
         try:
             out = _pvwatts_call(row.lat, row.lon, 1.0, nrel_key)
             solrad_rows.append({"zip": row.zip, "solrad_annual": float(out["solrad_annual"]), "solrad_source": "nrel_actual"})
-        except Exception as e:
+        except Exception:
             failed += 1
 
         if (i + 1) % 20 == 0:
@@ -180,7 +210,6 @@ def fetch_nrel_sample(zip_centroids: pd.DataFrame, nrel_key: str) -> pd.DataFram
     nrel_df = pd.DataFrame(solrad_rows)
     print(f"      -> {len(nrel_df)} successful NREL calls")
 
-    # Train Ridge regression: solrad ~ poly(lat, lon, degree=2)
     train = df.merge(nrel_df, on="zip")
     X_train = train[["lat", "lon"]].values
     y_train = train["solrad_annual"].values
@@ -189,11 +218,9 @@ def fetch_nrel_sample(zip_centroids: pd.DataFrame, nrel_key: str) -> pd.DataFram
     X_poly = poly.fit_transform(X_train)
     ridge = Ridge(alpha=1.0).fit(X_poly, y_train)
 
-    # Predict for all ZIPs
     X_all = poly.transform(df[["lat", "lon"]].values)
     df["solrad_predicted"] = ridge.predict(X_all).clip(3.0, 8.5)
 
-    # Merge: prefer actual NREL where available
     df = df.merge(nrel_df[["zip", "solrad_annual", "solrad_source"]], on="zip", how="left")
     mask = df["solrad_annual"].isna()
     df.loc[mask, "solrad_annual"] = df.loc[mask, "solrad_predicted"]
@@ -217,18 +244,20 @@ def main():
     if not args.nrel_key:
         sys.exit("ERROR: --nrel-key or NREL_KEY env var required")
 
-    lbnl = aggregate_lbnl()
+    lbnl_meta = lbnl_supplemental()
     census = fetch_census_ca()
 
     ca_zips = sorted(census["zip"].unique().tolist())
     centroids = fetch_zip_centroids(ca_zips)
 
+    records = aggregate_records(centroids)
     solrad = fetch_nrel_sample(centroids, args.nrel_key)
 
     print("[5/5] Joining all data sources...")
     df = census.merge(centroids, on="zip", how="left")
     df = df.merge(solrad, on="zip", how="left")
-    df = df.merge(lbnl, left_on="zip", right_on="zip_code", how="left")
+    df = df.merge(records, on="zip", how="left")
+    df = df.merge(lbnl_meta, left_on="zip", right_on="zip_code", how="left")
     df.drop(columns=["zip_code"], errors="ignore", inplace=True)
 
     df["install_count"] = df["install_count"].fillna(0).astype(int)
@@ -245,7 +274,7 @@ def main():
 
     df.to_csv(OUT_CSV, index=False)
     print(f"\nSaved {len(df)} rows to {OUT_CSV.name}")
-    print(f"  ZIPs with LBNL data:     {(df['install_count'] > 0).sum()}")
+    print(f"  ZIPs with install data:  {(df['install_count'] > 0).sum()}")
     print(f"  ZIPs with zero installs: {(df['install_count'] == 0).sum()}")
     print(f"  Median adoption rate:    {df['adoption_rate'].median():.2f} per 1,000 units")
 

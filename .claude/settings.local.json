@@ -8,7 +8,8 @@
       "Bash(python equity_gap/collect_data.py)",
       "Bash(python equity_gap/train_model.py)",
       "Bash(streamlit run *)",
-      "Bash(curl -s http://localhost:8501)"
+      "Bash(curl -s http://localhost:8501)",
+      "Bash(python3 *)"
     ]
   }
 }
